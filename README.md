@@ -131,9 +131,19 @@ ORDER BY m.ad;
 
 ### JavaScript (CDN)
 
-Dosyalar jsDelivr üzerinden doğrudan çekilebilir:
+Dosyalar jsDelivr üzerinden doğrudan çekilebilir. Adresin sonuna dosya adı eklenmelidir:
+
+| Dosya            | Adres                                                                                   |
+| ---------------- | --------------------------------------------------------------------------------------- |
+| İller            | <https://cdn.jsdelivr.net/gh/nesetdemir/il_ilce_mahalle@main/data/iller.json>           |
+| İlçeler          | <https://cdn.jsdelivr.net/gh/nesetdemir/il_ilce_mahalle@main/data/ilceler.json>         |
+| Mahalleler       | <https://cdn.jsdelivr.net/gh/nesetdemir/il_ilce_mahalle@main/data/mahalleler.json>      |
+| İç içe tam liste | <https://cdn.jsdelivr.net/gh/nesetdemir/il_ilce_mahalle@main/data/il_ilce_mahalle.json> |
+
+Tüm dosyaların listesi: <https://cdn.jsdelivr.net/gh/nesetdemir/il_ilce_mahalle@main/data/> (sondaki `/` gerekli).
 
 ```js
+// Ön ek: tek başına açılmaz, sonuna dosya adı eklenir
 const BASE = "https://cdn.jsdelivr.net/gh/nesetdemir/il_ilce_mahalle@main/data";
 
 const iller = await fetch(`${BASE}/iller.json`).then((r) => r.json());
