@@ -212,5 +212,61 @@ chunked(
 sql.push(`COMMIT;`);
 out("sql/postgresql.sql", sql.join("\n") + "\n");
 
+// MySQL 5.7+ / 8.x / MariaDB 10.3+
+const mq = (s) => (s == null ? "NULL" : `'${String(s).replace(/\\/g, "\\\\").replace(/'/g, "''")}'`);
+const my = [];
+my.push(`-- Türkiye il / ilçe / mahalle listesi (MySQL / MariaDB)`);
+my.push(`-- Kaynak: ${meta.kaynak}, ${meta.tarih}`);
+my.push(`-- Oluşturan: scripts/build.mjs`);
+my.push(``);
+my.push(`SET NAMES utf8mb4;`);
+my.push(``);
+my.push(`CREATE TABLE IF NOT EXISTS il (
+  plaka  TINYINT UNSIGNED NOT NULL PRIMARY KEY,
+  ad     VARCHAR(32) NOT NULL,
+  slug   VARCHAR(32) NOT NULL,
+  UNIQUE KEY il_slug_uq (slug)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_turkish_ci;
+
+CREATE TABLE IF NOT EXISTS ilce (
+  id        SMALLINT UNSIGNED NOT NULL PRIMARY KEY,
+  il_plaka  TINYINT UNSIGNED NOT NULL,
+  ad        VARCHAR(64) NOT NULL,
+  UNIQUE KEY ilce_il_ad_uq (il_plaka, ad),
+  CONSTRAINT ilce_il_fk FOREIGN KEY (il_plaka) REFERENCES il (plaka)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_turkish_ci;
+
+CREATE TABLE IF NOT EXISTS mahalle (
+  id          INT UNSIGNED NOT NULL PRIMARY KEY,
+  ilce_id     SMALLINT UNSIGNED NOT NULL,
+  ad          VARCHAR(128) NOT NULL,
+  tip         ENUM('mahalle', 'koy') NOT NULL,
+  koy         VARCHAR(128) NULL,
+  mevki       VARCHAR(128) NULL,
+  posta_kodu  VARCHAR(128) NULL,
+  ptt_adi     VARCHAR(128) NOT NULL,
+  KEY mahalle_ilce_id_idx (ilce_id),
+  CONSTRAINT mahalle_ilce_fk FOREIGN KEY (ilce_id) REFERENCES ilce (id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_turkish_ci;
+
+START TRANSACTION;
+`);
+const myChunked = (table, cols, rows) => {
+  for (let i = 0; i < rows.length; i += 500) {
+    my.push(`INSERT INTO ${table} (${cols.join(", ")}) VALUES`);
+    my.push(rows.slice(i, i + 500).map((r) => `  (${r.join(", ")})`).join(",\n") + ";");
+  }
+  my.push("");
+};
+myChunked("il", ["plaka", "ad", "slug"], ilRows.map((r) => [r.plaka, mq(r.ad), mq(r.slug)]));
+myChunked("ilce", ["id", "il_plaka", "ad"], ilceRows.map((r) => [r.id, r.il_plaka, mq(r.ad)]));
+myChunked(
+  "mahalle",
+  ["id", "ilce_id", "ad", "tip", "koy", "mevki", "posta_kodu", "ptt_adi"],
+  mahRows.map((r) => [r.id, r.ilce_id, mq(r.ad), mq(r.tip), mq(r.koy), mq(r.mevki), mq(r.posta_kodu), mq(r.ptt_adi)]),
+);
+my.push(`COMMIT;`);
+out("sql/mysql.sql", my.join("\n") + "\n");
+
 const koy = mahRows.filter((m) => m.tip === "koy").length;
 console.log(`il=${ilRows.length} ilce=${ilceRows.length} mahalle=${mahRows.length - koy} koy=${koy} toplam=${mahRows.length}`);

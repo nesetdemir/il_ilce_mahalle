@@ -1,6 +1,6 @@
 # Türkiye İl / İlçe / Mahalle Listesi
 
-Türkiye'nin güncel **81 il, 973 ilçe ve 72.434 mahalle/köy** listesi. Her kayıtta **posta kodu** var. Veri JSON, CSV ve PostgreSQL olarak hazır; adres formlarında, checkout ekranlarında ve kargo entegrasyonlarında doğrudan kullanılabilir.
+Türkiye'nin güncel **81 il, 973 ilçe ve 72.434 mahalle/köy** listesi. Her kayıtta **posta kodu** var. Veri JSON, CSV, PostgreSQL ve MySQL olarak hazır; adres formlarında, checkout ekranlarında ve kargo entegrasyonlarında doğrudan kullanılabilir.
 
 |                          |       Adet |
 | ------------------------ | ---------: |
@@ -29,6 +29,7 @@ PTT artık toplu indirme sunmuyor. Bu repo, PTT'nin herkese açık sorgulama ser
 | [`data/ilceler.json`](data/ilceler.json) / [`.csv`](data/ilceler.csv)          | İlçeler (`il_plaka` ile ile bağlı)                                        |
 | [`data/mahalleler.json`](data/mahalleler.json) / [`.csv`](data/mahalleler.csv) | Mahalle ve köyler (`ilce_id` ile ilçeye bağlı)                            |
 | [`sql/postgresql.sql`](sql/postgresql.sql)                                     | Tabloları oluşturan ve veriyi yükleyen PostgreSQL script'i                |
+| [`sql/mysql.sql`](sql/mysql.sql)                                               | Aynısının MySQL / MariaDB sürümü                                          |
 | [`data/ptt-raw.json`](data/ptt-raw.json)                                       | PTT'den gelen ham veri, değiştirilmemiş hali                              |
 
 ## Veri yapısı
@@ -128,6 +129,14 @@ JOIN ilce c ON c.id = m.ilce_id
 WHERE c.il_plaka = 34 AND c.ad = 'Kadıköy'
 ORDER BY m.ad;
 ```
+
+### MySQL / MariaDB
+
+```bash
+mysql --default-character-set=utf8mb4 -u kullanici -p veritabani < sql/mysql.sql
+```
+
+Tablolar `utf8mb4` karakter seti ve `utf8mb4_turkish_ci` collation ile oluşturulur, böylece `ORDER BY ad` Türkçe alfabe sırasına göre sıralar. Tablo yapısı ve sorgular PostgreSQL ile aynıdır. MySQL 5.7+, 8.x ve MariaDB 10.3+ ile uyumludur.
 
 ### JavaScript (CDN)
 
